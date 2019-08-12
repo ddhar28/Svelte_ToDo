@@ -62,10 +62,38 @@ var app = (function () {
     function children(element) {
         return Array.from(element.childNodes);
     }
+    function custom_event(type, detail) {
+        const e = document.createEvent('CustomEvent');
+        e.initCustomEvent(type, false, false, detail);
+        return e;
+    }
 
     let current_component;
     function set_current_component(component) {
         current_component = component;
+    }
+    function createEventDispatcher() {
+        const component = current_component;
+        return (type, detail) => {
+            const callbacks = component.$$.callbacks[type];
+            if (callbacks) {
+                // TODO are there situations where events could be dispatched
+                // in a server (non-DOM) environment?
+                const event = custom_event(type, detail);
+                callbacks.slice().forEach(fn => {
+                    fn.call(component, event);
+                });
+            }
+        };
+    }
+    // TODO figure out if we still want to support
+    // shorthand events, or if we want to implement
+    // a real bubbling mechanism
+    function bubble(component, event) {
+        const callbacks = component.$$.callbacks[event.type];
+        if (callbacks) {
+            callbacks.slice().forEach(fn => fn(event));
+        }
     }
 
     const dirty_components = [];
@@ -286,35 +314,44 @@ var app = (function () {
     const file = "src/TodoItem.svelte";
 
     function create_fragment(ctx) {
-    	var p, input, t0, button0, t2, button1, t4, button2, dispose;
+    	var section, div0, t0, div1, t1, button0, t3, button1, dispose;
 
     	return {
     		c: function create() {
-    			p = element("p");
-    			input = element("input");
+    			section = element("section");
+    			div0 = element("div");
     			t0 = space();
+    			div1 = element("div");
+    			t1 = space();
     			button0 = element("button");
     			button0.textContent = "✗";
-    			t2 = space();
+    			t3 = space();
     			button1 = element("button");
     			button1.textContent = "✓";
-    			t4 = space();
-    			button2 = element("button");
-    			button2.textContent = "✍";
-    			attr(input, "type", "text");
-    			input.value = ctx.taskName;
-    			input.disabled = "true";
-    			attr(input, "class", "svelte-14vjybx");
-    			add_location(input, file, 40, 0, 657);
-    			attr(p, "class", "svelte-14vjybx");
-    			add_location(p, file, 39, 0, 653);
-    			attr(button0, "class", "svelte-14vjybx");
-    			add_location(button0, file, 42, 0, 713);
-    			attr(button1, "class", "svelte-14vjybx");
-    			add_location(button1, file, 43, 0, 761);
-    			attr(button2, "class", "svelte-14vjybx");
-    			add_location(button2, file, 44, 0, 787);
-    			dispose = listen(button0, "click", deleteTask);
+    			if (ctx.taskName === void 0) add_render_callback(() => ctx.div0_input_handler.call(div0));
+    			attr(div0, "contenteditable", "true");
+    			attr(div0, "class", "svelte-2zgi9m");
+    			add_location(div0, file, 62, 2, 1047);
+    			if (ctx.note === void 0) add_render_callback(() => ctx.div1_input_handler.call(div1));
+    			attr(div1, "id", "note");
+    			attr(div1, "contenteditable", "true");
+    			attr(div1, "class", "svelte-2zgi9m");
+    			add_location(div1, file, 63, 2, 1112);
+    			attr(button0, "class", "svelte-2zgi9m");
+    			add_location(button0, file, 64, 2, 1183);
+    			attr(button1, "class", "svelte-2zgi9m");
+    			add_location(button1, file, 65, 2, 1233);
+    			attr(section, "id", ctx.id);
+    			attr(section, "class", "svelte-2zgi9m");
+    			add_location(section, file, 61, 0, 1007);
+
+    			dispose = [
+    				listen(div0, "input", ctx.div0_input_handler),
+    				listen(div1, "input", ctx.div1_input_handler),
+    				listen(button0, "click", ctx.deleteTask),
+    				listen(button1, "click", ctx.click_handler),
+    				listen(section, "input", ctx.editTask)
+    			];
     		},
 
     		l: function claim(nodes) {
@@ -322,19 +359,28 @@ var app = (function () {
     		},
 
     		m: function mount(target, anchor) {
-    			insert(target, p, anchor);
-    			append(p, input);
-    			insert(target, t0, anchor);
-    			insert(target, button0, anchor);
-    			insert(target, t2, anchor);
-    			insert(target, button1, anchor);
-    			insert(target, t4, anchor);
-    			insert(target, button2, anchor);
+    			insert(target, section, anchor);
+    			append(section, div0);
+
+    			if (ctx.taskName !== void 0) div0.textContent = ctx.taskName;
+
+    			append(section, t0);
+    			append(section, div1);
+
+    			if (ctx.note !== void 0) div1.textContent = ctx.note;
+
+    			append(section, t1);
+    			append(section, button0);
+    			append(section, t3);
+    			append(section, button1);
     		},
 
     		p: function update(changed, ctx) {
-    			if (changed.taskName) {
-    				input.value = ctx.taskName;
+    			if (changed.taskName && ctx.taskName !== div0.textContent) div0.textContent = ctx.taskName;
+    			if (changed.note && ctx.note !== div1.textContent) div1.textContent = ctx.note;
+
+    			if (changed.id) {
+    				attr(section, "id", ctx.id);
     			}
     		},
 
@@ -343,48 +389,88 @@ var app = (function () {
 
     		d: function destroy(detaching) {
     			if (detaching) {
-    				detach(p);
-    				detach(t0);
-    				detach(button0);
-    				detach(t2);
-    				detach(button1);
-    				detach(t4);
-    				detach(button2);
+    				detach(section);
     			}
 
-    			dispose();
+    			run_all(dispose);
     		}
     	};
     }
 
-    function deleteTask() {
-        
-    }
-
     function instance($$self, $$props, $$invalidate) {
-    	let { taskName } = $$props;
+    	let { taskName, id, note } = $$props;
+      const dispatch = createEventDispatcher();
 
-    	const writable_props = ['taskName'];
+      function deleteTask() {
+        dispatch('delete', id);
+      }
+
+      function editTask(e) {
+        dispatch('edit', 
+          {
+            id: id,
+            taskname: taskName,
+            note: note
+          });
+      }
+
+    //   function completeTask() {
+    //     e.target.disabled = true;
+    //     dispatch("complete", id)
+    //   }
+
+    	const writable_props = ['taskName', 'id', 'note'];
     	Object.keys($$props).forEach(key => {
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<TodoItem> was created with unknown prop '${key}'`);
     	});
 
+    	function click_handler(event) {
+    		bubble($$self, event);
+    	}
+
+    	function div0_input_handler() {
+    		taskName = this.textContent;
+    		$$invalidate('taskName', taskName);
+    	}
+
+    	function div1_input_handler() {
+    		note = this.textContent;
+    		$$invalidate('note', note);
+    	}
+
     	$$self.$set = $$props => {
     		if ('taskName' in $$props) $$invalidate('taskName', taskName = $$props.taskName);
+    		if ('id' in $$props) $$invalidate('id', id = $$props.id);
+    		if ('note' in $$props) $$invalidate('note', note = $$props.note);
     	};
 
-    	return { taskName };
+    	return {
+    		taskName,
+    		id,
+    		note,
+    		deleteTask,
+    		editTask,
+    		click_handler,
+    		div0_input_handler,
+    		div1_input_handler
+    	};
     }
 
     class TodoItem extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance, create_fragment, safe_not_equal, ["taskName"]);
+    		init(this, options, instance, create_fragment, safe_not_equal, ["taskName", "id", "note"]);
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
     		if (ctx.taskName === undefined && !('taskName' in props)) {
     			console.warn("<TodoItem> was created without expected prop 'taskName'");
+    		}
+    		if (ctx.id === undefined && !('id' in props)) {
+    			console.warn("<TodoItem> was created without expected prop 'id'");
+    		}
+    		if (ctx.note === undefined && !('note' in props)) {
+    			console.warn("<TodoItem> was created without expected prop 'note'");
     		}
     	}
 
@@ -393,6 +479,22 @@ var app = (function () {
     	}
 
     	set taskName(value) {
+    		throw new Error("<TodoItem>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get id() {
+    		throw new Error("<TodoItem>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set id(value) {
+    		throw new Error("<TodoItem>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get note() {
+    		throw new Error("<TodoItem>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set note(value) {
     		throw new Error("<TodoItem>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
@@ -407,22 +509,28 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (31:4) {#each todos as todo}
+    // (29:2) {#each todos as todo}
     function create_each_block(ctx) {
     	var div, t, current;
 
     	var todoitem = new TodoItem({
-    		props: { taskName: ctx.todo.title },
+    		props: {
+    		id: ctx.todo.task_id,
+    		taskName: ctx.todo.taskname,
+    		note: ctx.todo.note
+    	},
     		$$inline: true
     	});
+    	todoitem.$on("delete", ctx.delete_handler);
+    	todoitem.$on("edit", ctx.edit_handler);
 
     	return {
     		c: function create() {
     			div = element("div");
     			todoitem.$$.fragment.c();
     			t = space();
-    			attr(div, "class", "svelte-vbk002");
-    			add_location(div, file$1, 31, 4, 562);
+    			attr(div, "class", "svelte-1ydp6nm");
+    			add_location(div, file$1, 29, 4, 479);
     		},
 
     		m: function mount(target, anchor) {
@@ -434,7 +542,9 @@ var app = (function () {
 
     		p: function update(changed, ctx) {
     			var todoitem_changes = {};
-    			if (changed.todos) todoitem_changes.taskName = ctx.todo.title;
+    			if (changed.todos) todoitem_changes.id = ctx.todo.task_id;
+    			if (changed.todos) todoitem_changes.taskName = ctx.todo.taskname;
+    			if (changed.todos) todoitem_changes.note = ctx.todo.note;
     			todoitem.$set(todoitem_changes);
     		},
 
@@ -482,8 +592,8 @@ var app = (function () {
     			for (var i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
-    			attr(section, "class", "svelte-vbk002");
-    			add_location(section, file$1, 29, 0, 522);
+    			attr(section, "class", "svelte-1ydp6nm");
+    			add_location(section, file$1, 27, 0, 441);
     		},
 
     		l: function claim(nodes) {
@@ -556,11 +666,19 @@ var app = (function () {
     		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<TodoList> was created with unknown prop '${key}'`);
     	});
 
+    	function delete_handler(event) {
+    		bubble($$self, event);
+    	}
+
+    	function edit_handler(event) {
+    		bubble($$self, event);
+    	}
+
     	$$self.$set = $$props => {
     		if ('todos' in $$props) $$invalidate('todos', todos = $$props.todos);
     	};
 
-    	return { todos };
+    	return { todos, delete_handler, edit_handler };
     }
 
     class TodoList extends SvelteComponentDev {
@@ -589,19 +707,21 @@ var app = (function () {
     const file$2 = "src/App.svelte";
 
     function create_fragment$2(ctx) {
-    	var div, section0, h20, t1, input, t2, button, t4, section1, span, h21, t6, h22, t8, current, dispose;
+    	var div, section0, h20, t1, input, t2, button, t4, section1, span, h21, t6, current, dispose;
 
     	var todolist = new TodoList({
     		props: { todos: ctx.todos },
     		$$inline: true
     	});
+    	todolist.$on("delete", ctx.deleteTask);
+    	todolist.$on("edit", ctx.editTask);
 
     	return {
     		c: function create() {
     			div = element("div");
     			section0 = element("section");
     			h20 = element("h2");
-    			h20.textContent = "To-Dos:";
+    			h20.textContent = "To-Do App";
     			t1 = space();
     			input = element("input");
     			t2 = space();
@@ -611,36 +731,30 @@ var app = (function () {
     			section1 = element("section");
     			span = element("span");
     			h21 = element("h2");
-    			h21.textContent = "Incomplete";
+    			h21.textContent = "To-Dos:";
     			t6 = space();
-    			h22 = element("h2");
-    			h22.textContent = "Completed";
-    			t8 = space();
     			todolist.$$.fragment.c();
-    			attr(h20, "class", "svelte-138bqzq");
-    			add_location(h20, file$2, 71, 2, 809);
+    			attr(h20, "class", "svelte-1knfx7s");
+    			add_location(h20, file$2, 130, 4, 2205);
     			attr(input, "id", "input");
     			attr(input, "type", "text");
-    			attr(input, "class", "svelte-138bqzq");
-    			add_location(input, file$2, 72, 2, 828);
-    			attr(button, "class", "svelte-138bqzq");
-    			add_location(button, file$2, 73, 2, 905);
+    			attr(input, "class", "svelte-1knfx7s");
+    			add_location(input, file$2, 131, 4, 2228);
+    			attr(button, "class", "svelte-1knfx7s");
+    			add_location(button, file$2, 132, 4, 2311);
     			attr(section0, "id", "taskInput");
-    			attr(section0, "class", "svelte-138bqzq");
-    			add_location(section0, file$2, 70, 1, 782);
+    			attr(section0, "class", "svelte-1knfx7s");
+    			add_location(section0, file$2, 129, 2, 2176);
     			attr(h21, "id", "test");
-    			attr(h21, "class", "svelte-138bqzq");
-    			add_location(h21, file$2, 77, 3, 975);
-    			attr(h22, "id", "test1");
-    			attr(h22, "class", "svelte-138bqzq");
-    			add_location(h22, file$2, 78, 3, 1008);
-    			attr(span, "class", "svelte-138bqzq");
-    			add_location(span, file$2, 76, 2, 965);
+    			attr(h21, "class", "svelte-1knfx7s");
+    			add_location(h21, file$2, 136, 6, 2388);
+    			attr(span, "class", "svelte-1knfx7s");
+    			add_location(span, file$2, 135, 4, 2375);
     			attr(section1, "id", "taskList");
-    			attr(section1, "class", "svelte-138bqzq");
-    			add_location(section1, file$2, 75, 1, 939);
-    			attr(div, "class", "container svelte-138bqzq");
-    			add_location(div, file$2, 69, 0, 757);
+    			attr(section1, "class", "svelte-1knfx7s");
+    			add_location(section1, file$2, 134, 2, 2347);
+    			attr(div, "class", "container svelte-1knfx7s");
+    			add_location(div, file$2, 128, 0, 2150);
 
     			dispose = [
     				listen(input, "input", ctx.input_input_handler),
@@ -659,7 +773,7 @@ var app = (function () {
     			append(section0, t1);
     			append(section0, input);
 
-    			input.value = ctx.task.title;
+    			input.value = ctx.task.taskname;
 
     			append(section0, t2);
     			append(section0, button);
@@ -667,15 +781,13 @@ var app = (function () {
     			append(div, section1);
     			append(section1, span);
     			append(span, h21);
-    			append(span, t6);
-    			append(span, h22);
-    			append(section1, t8);
+    			append(section1, t6);
     			mount_component(todolist, section1, null);
     			current = true;
     		},
 
     		p: function update(changed, ctx) {
-    			if (changed.task && (input.value !== ctx.task.title)) input.value = ctx.task.title;
+    			if (changed.task && (input.value !== ctx.task.taskname)) input.value = ctx.task.taskname;
 
     			var todolist_changes = {};
     			if (changed.todos) todolist_changes.todos = ctx.todos;
@@ -707,22 +819,75 @@ var app = (function () {
     }
 
     function instance$2($$self, $$props, $$invalidate) {
-    	let todos = [];
+    	let header = {
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      };
 
-    	let task = {
-    		title: ''
+      let todos = [];
+
+      let task = {
+        taskname: '',
+        state: 'active',
+    	note: '',
+      };
+
+      async function getTask() {
+        const result = await fetch('/getTasks', {
+          method: 'GET',
+          Headers: header
+        });
+    	let tasks = await result.json();
+    	$$invalidate('todos', todos = tasks.sort((a, b) => a.task_id-b.task_id));
+    	console.log(todos);
+      }
+
+      async function addTask() {
+        const newTask = {
+          taskname: task.taskname,
+          state: 'active',
+          note: ''
     	};
+    	console.log(newTask);
+        const res = await fetch('/add', {
+          method: 'POST',
+          headers: header,
+          body: JSON.stringify(newTask)
+        });
+    	getTask();
+      }
 
-    	function addTask () {
-    		const newTask = {
-    			title: task.title
-    		};
-    		$$invalidate('todos', todos = todos.concat(newTask));
-    		task.title = ''; $$invalidate('task', task);
-    	}
+      async function deleteTask (e) {
+        const id = e.detail;
+        await fetch('/delete', {
+          method: 'POST',
+          headers: header,
+          body: JSON.stringify({ id: id })
+        });
+        getTask();
+      }
+
+      async function editTask (e) {
+    	const editedTask = e.detail;
+    	await fetch('/edit', {
+          method: 'POST',
+          headers: header,
+          body: JSON.stringify(editedTask)
+        });
+        getTask();
+      }
+
+    //   function completeTask(e) {
+    //     let name = e.detail
+    //     let task = todos.find(todo => todo.taskname === name)
+    //     completed = completed.concat(task)
+    //     console.log(completed)
+    //   }
+
+      getTask();
 
     	function input_input_handler() {
-    		task.title = this.value;
+    		task.taskname = this.value;
     		$$invalidate('task', task);
     	}
 
@@ -730,6 +895,8 @@ var app = (function () {
     		todos,
     		task,
     		addTask,
+    		deleteTask,
+    		editTask,
     		input_input_handler
     	};
     }
@@ -743,9 +910,7 @@ var app = (function () {
 
     const app = new App({
       target: document.body,
-      props: {
-        name: 'To Dos'
-      }
+      props: {}
     });
 
     return app;

@@ -1,36 +1,34 @@
 <script>
-    import TodoItem from './TodoItem.svelte'
-    export let todos
+  import TodoItem from "./TodoItem.svelte"
+  export let todos
 </script>
 
 <style>
-    section {
-        width: 100%;
-        display: flex;
-        justify-content: flex-start;
-        align-items: flex-start;
-        align-content: flex-start;
-		flex-flow: row wrap;
-    }
+  section {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    align-content: flex-start;
+    flex-flow: row wrap;
+  }
 
-    section:not(:empty) {
-        overflow-y: scroll;
-    }
+  section:not(:empty) {
+    overflow-y: scroll;
+  }
 
-    div {
-        margin: 5px;
-        max-width:30%;
-        min-width: 30%;
-        height: 50px auto;
-        background-color: rgba(255, 255, 0, 0.678);
-    }
+  div {
+    margin: 5px;
+    max-width: 30%;
+    min-width: 30%;
+    background-color: rgba(255, 208, 0, 0.678);
+  }
 </style>
 
-
 <section>
-    {#each todos as todo}
+  {#each todos as todo}
     <div>
-        <TodoItem taskName={todo.title}/>
+      <TodoItem id={todo.task_id} taskName={todo.taskname} note={todo.note} on:delete on:edit/>
     </div>
-    {/each}
+  {/each}
 </section>
