@@ -35,12 +35,11 @@ app.post('/add', async function (req, res) {
   const client = new Client(conString)
   await client.connect()
 
-  const sql = 'INSERT INTO TODOS(taskname, state, note) VALUES($1,$2,$3);'
-  console.log(req.body)
+  const sql = 'INSERT INTO TODOS(taskname, state, note) VALUES($1,$2,$3) RETURNING task_id;'
   const param = [req.body.taskname, req.body.state, req.body.note]
   let result = await client.query(sql, param)
   // console.log(result.rows[0])
-  res.end(result.rows[0])
+  res.send(result.rows[0])
 })
 
 app.post('/delete', async function (req, res) {
@@ -76,17 +75,6 @@ app.post('/edit', async function (req, res) {
 
   res.end('ok')
 })
-
-// app.post('/note', async function (req, res) {
-//   const client = new Client(conString)
-//   await client.connect()
-
-//   const sql = 'UPDATE TODOS SET note = $1 WHERE task_id = $2;'
-//   const param = [req.body.note, req.body.id]
-//   await client.query(sql, param)
-
-//   res.end('ok')
-// })
 
 // app.use((req, res, next) => {
 //   const error = new Error()

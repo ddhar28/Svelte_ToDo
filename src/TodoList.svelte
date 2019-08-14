@@ -1,6 +1,6 @@
 <script>
   import TodoItem from "./TodoItem.svelte"
-  export let todos
+  export let tasks
 </script>
 
 <style>
@@ -22,13 +22,14 @@
     max-width: 30%;
     min-width: 30%;
     background-color: rgba(255, 208, 0, 0.678);
+    transition: all 1s ease 1s;
   }
 </style>
 
 <section>
-  {#each todos as todo}
+  {#each tasks as task}
     <div>
-      <TodoItem id={todo.task_id} taskName={todo.taskname} note={todo.note} on:delete on:edit/>
+      <TodoItem id={task.task_id} taskName={task.taskname} note={task.note} state={task.state} on:delete on:edit on:complete/>
     </div>
   {/each}
 </section>
