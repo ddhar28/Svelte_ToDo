@@ -15,7 +15,7 @@
   function editTask(e) {
     dispatch('edit', 
       {
-        id: id,
+        _id: id,
         taskname: taskName,
         note: note
       })
@@ -73,7 +73,7 @@
     color: black;
     height: auto;
     min-height: 5em;
-	max-height: 50vh;
+	  max-height: 50vh;
   }
 </style>
 

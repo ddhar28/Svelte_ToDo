@@ -19,7 +19,6 @@
       Headers: header
     });
 	all = await result.json()
-	// all = tasks.sort((a, b) => a.task_id-b.task_id)
 	todos = all.filter((todo) => todo.state === 'active')
 	completed = all.filter((todo) => todo.state === 'inactive')
   }
@@ -32,7 +31,8 @@
       headers: header,
       body: JSON.stringify({ taskname: newTask })
     })
-	newTask = await res.json()
+  newTask = await res.json()
+  all = all.concat(newTask)
 	todos = todos.concat(newTask)
 	task = ''
   }
@@ -42,14 +42,14 @@
     await fetch('/delete', {
       method: 'POST',
       headers: header,
-      body: JSON.stringify({ id: id })
+      body: JSON.stringify({ _id: id })
     })
-    todos = todos.filter((todo) => todo.task_id !== id)
+    todos = todos.filter((todo) => todo._id !== id)
   }
 
   async function editTask (e) {
-	const editedTask = e.detail
-	await fetch('/edit', {
+	  const editedTask = e.detail
+	  const res = await fetch('/edit', {
       method: 'POST',
       headers: header,
       body: JSON.stringify(editedTask)
@@ -57,21 +57,30 @@
     getTask()
   }
 
-  async function completeTask(e) {
-	console.log('changing state...', e.detail)
-	let id = e.detail.id
-	let isActive = e.detail.state === 'active' ? true : false
-	let state =  isActive ? 'inactive' : 'active'
+  // function listUpdate (id, fromList = todos , toList = completed) {
+  //   const index = fromList.findIndex((todo) => todo._id === id)
+  //   const task = fromList.splice(index, 1)[0]
+  //   toList.push(task)
+  // }
 
-	await fetch('/state', {
+  async function completeTask(e) {
+	  let id = e.detail.id
+	  let isActive = e.detail.state === 'active' ? true : false
+	  let state =  isActive ? 'inactive' : 'active'
+
+	  await fetch('/edit', {
       method: 'POST',
       headers: header,
       body: JSON.stringify({ 
-		id: id, 
-		state: state})
-	})
-	
-	getTask()
+		  _id: id, 
+		  state: state})
+    })
+    
+    getTask()
+    // if (!isActive) listUpdate(id, completed, todos)
+    // else listUpdate(id)
+    // console.log(todos)
+    // console.log(completed)
   }
 
   function toggleDisplay () {

@@ -564,16 +564,16 @@ var app = (function () {
     			attr(textarea0, "id", "title");
     			attr(textarea0, "maxlength", "50");
     			attr(textarea0, "spellcheck", "false");
-    			attr(textarea0, "class", "svelte-1yzcpi4");
-    			add_location(textarea0, file$1, 80, 2, 1327);
+    			attr(textarea0, "class", "svelte-4fz4d8");
+    			add_location(textarea0, file$1, 80, 2, 1330);
     			attr(textarea1, "id", "note");
     			attr(textarea1, "maxlength", "300");
     			attr(textarea1, "spellcheck", "false");
-    			attr(textarea1, "class", "svelte-1yzcpi4");
-    			add_location(textarea1, file$1, 81, 2, 1418);
+    			attr(textarea1, "class", "svelte-4fz4d8");
+    			add_location(textarea1, file$1, 81, 2, 1421);
     			attr(section, "id", ctx.id);
-    			attr(section, "class", "svelte-1yzcpi4");
-    			add_location(section, file$1, 79, 0, 1286);
+    			attr(section, "class", "svelte-4fz4d8");
+    			add_location(section, file$1, 79, 0, 1289);
 
     			dispose = [
     				listen(textarea0, "input", ctx.textarea0_input_handler),
@@ -661,7 +661,7 @@ var app = (function () {
       function editTask(e) {
         dispatch('edit', 
           {
-            id: id,
+            _id: id,
             taskname: taskName,
             note: note
           });
@@ -982,7 +982,7 @@ var app = (function () {
 
     const file$3 = "src/App.svelte";
 
-    // (158:1) {:else}
+    // (167:1) {:else}
     function create_else_block$1(ctx) {
     	var current;
 
@@ -1028,7 +1028,7 @@ var app = (function () {
     	};
     }
 
-    // (156:1) {#if listDisplay === 'todo'}
+    // (165:1) {#if listDisplay === 'todo'}
     function create_if_block$1(ctx) {
     	var current;
 
@@ -1114,28 +1114,28 @@ var app = (function () {
     			t8 = space();
     			if_block.c();
     			attr(h20, "class", "svelte-xsjhs9");
-    			add_location(h20, file$3, 145, 4, 2665);
+    			add_location(h20, file$3, 154, 4, 2990);
     			attr(input, "id", "input");
     			attr(input, "maxlength", "50");
     			attr(input, "type", "text");
     			attr(input, "class", "svelte-xsjhs9");
-    			add_location(input, file$3, 146, 4, 2688);
+    			add_location(input, file$3, 155, 4, 3013);
     			attr(button, "class", "svelte-xsjhs9");
-    			add_location(button, file$3, 147, 4, 2777);
+    			add_location(button, file$3, 156, 4, 3102);
     			attr(section0, "id", "taskInput");
     			attr(section0, "class", "svelte-xsjhs9");
-    			add_location(section0, file$3, 144, 2, 2636);
+    			add_location(section0, file$3, 153, 2, 2961);
     			attr(h21, "class", "svelte-xsjhs9");
-    			add_location(h21, file$3, 151, 6, 2873);
+    			add_location(h21, file$3, 160, 6, 3198);
     			attr(h22, "class", "svelte-xsjhs9");
-    			add_location(h22, file$3, 152, 3, 2917);
+    			add_location(h22, file$3, 161, 3, 3242);
     			attr(span, "class", "svelte-xsjhs9");
-    			add_location(span, file$3, 150, 4, 2860);
+    			add_location(span, file$3, 159, 4, 3185);
     			attr(section1, "id", "taskList");
     			attr(section1, "class", "svelte-xsjhs9");
-    			add_location(section1, file$3, 149, 2, 2832);
+    			add_location(section1, file$3, 158, 2, 3157);
     			attr(div, "class", "container svelte-xsjhs9");
-    			add_location(div, file$3, 143, 0, 2610);
+    			add_location(div, file$3, 152, 0, 2935);
 
     			dispose = [
     				listen(input, "input", ctx.input_input_handler),
@@ -1237,7 +1237,6 @@ var app = (function () {
           Headers: header
         });
     	all = await result.json();
-    	// all = tasks.sort((a, b) => a.task_id-b.task_id)
     	$$invalidate('todos', todos = all.filter((todo) => todo.state === 'active'));
     	$$invalidate('completed', completed = all.filter((todo) => todo.state === 'inactive'));
       }
@@ -1250,7 +1249,8 @@ var app = (function () {
           headers: header,
           body: JSON.stringify({ taskname: newTask })
         });
-    	newTask = await res.json();
+      newTask = await res.json();
+      all = all.concat(newTask);
     	$$invalidate('todos', todos = todos.concat(newTask));
     	$$invalidate('task', task = '');
       }
@@ -1260,14 +1260,14 @@ var app = (function () {
         await fetch('/delete', {
           method: 'POST',
           headers: header,
-          body: JSON.stringify({ id: id })
+          body: JSON.stringify({ _id: id })
         });
-        $$invalidate('todos', todos = todos.filter((todo) => todo.task_id !== id));
+        $$invalidate('todos', todos = todos.filter((todo) => todo._id !== id));
       }
 
       async function editTask (e) {
-    	const editedTask = e.detail;
-    	await fetch('/edit', {
+    	  const editedTask = e.detail;
+    	  const res = await fetch('/edit', {
           method: 'POST',
           headers: header,
           body: JSON.stringify(editedTask)
@@ -1275,21 +1275,30 @@ var app = (function () {
         getTask();
       }
 
-      async function completeTask(e) {
-    	console.log('changing state...', e.detail);
-    	let id = e.detail.id;
-    	let isActive = e.detail.state === 'active' ? true : false;
-    	let state =  isActive ? 'inactive' : 'active';
+      // function listUpdate (id, fromList = todos , toList = completed) {
+      //   const index = fromList.findIndex((todo) => todo._id === id)
+      //   const task = fromList.splice(index, 1)[0]
+      //   toList.push(task)
+      // }
 
-    	await fetch('/state', {
+      async function completeTask(e) {
+    	  let id = e.detail.id;
+    	  let isActive = e.detail.state === 'active' ? true : false;
+    	  let state =  isActive ? 'inactive' : 'active';
+
+    	  await fetch('/edit', {
           method: 'POST',
           headers: header,
           body: JSON.stringify({ 
-    		id: id, 
-    		state: state})
-    	});
-    	
-    	getTask();
+    		  _id: id, 
+    		  state: state})
+        });
+        
+        getTask();
+        // if (!isActive) listUpdate(id, completed, todos)
+        // else listUpdate(id)
+        // console.log(todos)
+        // console.log(completed)
       }
 
       function toggleDisplay () {
