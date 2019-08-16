@@ -29,7 +29,7 @@
 <section>
   {#each tasks as task}
     <div>
-      <TodoItem id={task.task_id} taskName={task.taskname} note={task.note} state={task.state} on:delete on:edit on:complete/>
+      <TodoItem id={task._id} taskName={task.taskname} note={task.note} state={task.state} on:delete on:edit on:complete/>
     </div>
   {/each}
 </section>

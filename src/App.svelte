@@ -11,42 +11,30 @@
   let completed = []
   let listDisplay =  'todo'
 
-  let task = {
-    taskname: '',
-    state: 'active',
-	note: '',
-  }
+  let task = ''
 
   async function getTask() {
-    const result = await fetch('/getTasks', {
+    const result = await fetch('/get', {
       method: 'GET',
       Headers: header
     });
-	let tasks = await result.json()
-	all = tasks.sort((a, b) => a.task_id-b.task_id)
+	all = await result.json()
+	// all = tasks.sort((a, b) => a.task_id-b.task_id)
 	todos = all.filter((todo) => todo.state === 'active')
 	completed = all.filter((todo) => todo.state === 'inactive')
-
-	console.log(todos)
-	console.log(completed)
   }
 
   async function addTask() {
-    const newTask = {
-      taskname: task.taskname,
-      state: 'active',
-      note: ''
-	}
+    let newTask = task.trim()
+    if (newTask === '') return
     const res = await fetch('/add', {
       method: 'POST',
       headers: header,
-      body: JSON.stringify(newTask)
+      body: JSON.stringify({ taskname: newTask })
     })
-	let id = await res.json()
-	newTask.task_id = id.task_id
-	console.log(newTask)
+	newTask = await res.json()
 	todos = todos.concat(newTask)
-	task.taskname = ''
+	task = ''
   }
 
   async function deleteTask (e) {
@@ -156,8 +144,8 @@
 <div class='container'>
   <section id='taskInput'>
     <h2>To-Do App</h2>
-    <input id='input' maxlength="50" type='text' bind:value={task.taskname} on:change={addTask}/>
-    <button>Add</button>
+    <input id='input' maxlength="50" type='text' bind:value={task} on:change={addTask}/>
+    <button on:click={addTask}>Add</button>
   </section>
   <section id='taskList'>
     <span>

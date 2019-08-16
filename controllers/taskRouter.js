@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const db = require('../models/db')
 
-router.get('/', async function (req, res) {
+router.get('/get', async function (req, res) {
   let tasks = await db.getTask()
   res.send(tasks)
 })

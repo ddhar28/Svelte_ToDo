@@ -19,7 +19,7 @@ exports.addTask = async function (req, res) {
     note: ''
   })
   todo = await todo.save()
-  return todo._id
+  return todo
 }
 
 exports.updateTask = async function (req, res) {

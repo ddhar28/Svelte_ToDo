@@ -5,7 +5,7 @@ const taskRouter = require('./controllers/taskRouter')
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
-// app.use(express.static('public'))
+app.use(express.static('public'))
 
 require('./models/db')
 

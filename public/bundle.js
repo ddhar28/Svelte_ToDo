@@ -779,7 +779,7 @@ var app = (function () {
 
     	var todoitem = new TodoItem({
     		props: {
-    		id: ctx.task.task_id,
+    		id: ctx.task._id,
     		taskName: ctx.task.taskname,
     		note: ctx.task.note,
     		state: ctx.task.state
@@ -808,7 +808,7 @@ var app = (function () {
 
     		p: function update(changed, ctx) {
     			var todoitem_changes = {};
-    			if (changed.tasks) todoitem_changes.id = ctx.task.task_id;
+    			if (changed.tasks) todoitem_changes.id = ctx.task._id;
     			if (changed.tasks) todoitem_changes.taskName = ctx.task.taskname;
     			if (changed.tasks) todoitem_changes.note = ctx.task.note;
     			if (changed.tasks) todoitem_changes.state = ctx.task.state;
@@ -982,7 +982,7 @@ var app = (function () {
 
     const file$3 = "src/App.svelte";
 
-    // (170:1) {:else}
+    // (158:1) {:else}
     function create_else_block$1(ctx) {
     	var current;
 
@@ -1028,7 +1028,7 @@ var app = (function () {
     	};
     }
 
-    // (168:1) {#if listDisplay === 'todo'}
+    // (156:1) {#if listDisplay === 'todo'}
     function create_if_block$1(ctx) {
     	var current;
 
@@ -1114,32 +1114,33 @@ var app = (function () {
     			t8 = space();
     			if_block.c();
     			attr(h20, "class", "svelte-xsjhs9");
-    			add_location(h20, file$3, 157, 4, 2850);
+    			add_location(h20, file$3, 145, 4, 2665);
     			attr(input, "id", "input");
     			attr(input, "maxlength", "50");
     			attr(input, "type", "text");
     			attr(input, "class", "svelte-xsjhs9");
-    			add_location(input, file$3, 158, 4, 2873);
+    			add_location(input, file$3, 146, 4, 2688);
     			attr(button, "class", "svelte-xsjhs9");
-    			add_location(button, file$3, 159, 4, 2971);
+    			add_location(button, file$3, 147, 4, 2777);
     			attr(section0, "id", "taskInput");
     			attr(section0, "class", "svelte-xsjhs9");
-    			add_location(section0, file$3, 156, 2, 2821);
+    			add_location(section0, file$3, 144, 2, 2636);
     			attr(h21, "class", "svelte-xsjhs9");
-    			add_location(h21, file$3, 163, 6, 3048);
+    			add_location(h21, file$3, 151, 6, 2873);
     			attr(h22, "class", "svelte-xsjhs9");
-    			add_location(h22, file$3, 164, 3, 3092);
+    			add_location(h22, file$3, 152, 3, 2917);
     			attr(span, "class", "svelte-xsjhs9");
-    			add_location(span, file$3, 162, 4, 3035);
+    			add_location(span, file$3, 150, 4, 2860);
     			attr(section1, "id", "taskList");
     			attr(section1, "class", "svelte-xsjhs9");
-    			add_location(section1, file$3, 161, 2, 3007);
+    			add_location(section1, file$3, 149, 2, 2832);
     			attr(div, "class", "container svelte-xsjhs9");
-    			add_location(div, file$3, 155, 0, 2795);
+    			add_location(div, file$3, 143, 0, 2610);
 
     			dispose = [
     				listen(input, "input", ctx.input_input_handler),
     				listen(input, "change", ctx.addTask),
+    				listen(button, "click", ctx.addTask),
     				listen(h21, "click", ctx.toggleDisplay),
     				listen(h22, "click", ctx.toggleDisplay)
     			];
@@ -1156,7 +1157,7 @@ var app = (function () {
     			append(section0, t1);
     			append(section0, input);
 
-    			input.value = ctx.task.taskname;
+    			input.value = ctx.task;
 
     			append(section0, t2);
     			append(section0, button);
@@ -1172,7 +1173,7 @@ var app = (function () {
     		},
 
     		p: function update(changed, ctx) {
-    			if (changed.task && (input.value !== ctx.task.taskname)) input.value = ctx.task.taskname;
+    			if (changed.task && (input.value !== ctx.task)) input.value = ctx.task;
 
     			var previous_block_index = current_block_type_index;
     			current_block_type_index = select_block_type(ctx);
@@ -1228,42 +1229,30 @@ var app = (function () {
       let completed = [];
       let listDisplay =  'todo';
 
-      let task = {
-        taskname: '',
-        state: 'active',
-    	note: '',
-      };
+      let task = '';
 
       async function getTask() {
-        const result = await fetch('/getTasks', {
+        const result = await fetch('/get', {
           method: 'GET',
           Headers: header
         });
-    	let tasks = await result.json();
-    	all = tasks.sort((a, b) => a.task_id-b.task_id);
+    	all = await result.json();
+    	// all = tasks.sort((a, b) => a.task_id-b.task_id)
     	$$invalidate('todos', todos = all.filter((todo) => todo.state === 'active'));
     	$$invalidate('completed', completed = all.filter((todo) => todo.state === 'inactive'));
-
-    	console.log(todos);
-    	console.log(completed);
       }
 
       async function addTask() {
-        const newTask = {
-          taskname: task.taskname,
-          state: 'active',
-          note: ''
-    	};
+        let newTask = task.trim();
+        if (newTask === '') return
         const res = await fetch('/add', {
           method: 'POST',
           headers: header,
-          body: JSON.stringify(newTask)
+          body: JSON.stringify({ taskname: newTask })
         });
-    	let id = await res.json();
-    	newTask.task_id = id.task_id;
-    	console.log(newTask);
+    	newTask = await res.json();
     	$$invalidate('todos', todos = todos.concat(newTask));
-    	task.taskname = ''; $$invalidate('task', task);
+    	$$invalidate('task', task = '');
       }
 
       async function deleteTask (e) {
@@ -1311,7 +1300,7 @@ var app = (function () {
       getTask();
 
     	function input_input_handler() {
-    		task.taskname = this.value;
+    		task = this.value;
     		$$invalidate('task', task);
     	}
 
