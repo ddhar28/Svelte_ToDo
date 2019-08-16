@@ -7,10 +7,11 @@
   };
 
   let all = []
-  let todos = []
-  let completed = []
-  let listDisplay =  'todo'
+  $: todos = all.filter((todo) => todo.state === 'active')
+  $: completed = all.filter((todo) => todo.state === 'inactive')
+  $: total = all.length
 
+  let listDisplay =  'todo'
   let task = ''
 
   async function getTask() {
@@ -18,9 +19,7 @@
       method: 'GET',
       Headers: header
     });
-	all = await result.json()
-	todos = all.filter((todo) => todo.state === 'active')
-	completed = all.filter((todo) => todo.state === 'inactive')
+	  all = await result.json() 
   }
 
   async function addTask() {
@@ -31,10 +30,9 @@
       headers: header,
       body: JSON.stringify({ taskname: newTask })
     })
-  newTask = await res.json()
-  all = all.concat(newTask)
-	todos = todos.concat(newTask)
-	task = ''
+    newTask = await res.json()
+    all = all.concat(newTask)
+	  task = ''
   }
 
   async function deleteTask (e) {
@@ -44,7 +42,8 @@
       headers: header,
       body: JSON.stringify({ _id: id })
     })
-    todos = todos.filter((todo) => todo._id !== id)
+
+    all = all.filter((todo) => todo._id !== id)
   }
 
   async function editTask (e) {
@@ -54,21 +53,19 @@
       headers: header,
       body: JSON.stringify(editedTask)
     })
-    getTask()
+    
+    let task = await res.json()
+    let i = all.findIndex((todo) => todo._id === id)
+    all.splice(i, 1, task)
+    all = all
   }
-
-  // function listUpdate (id, fromList = todos , toList = completed) {
-  //   const index = fromList.findIndex((todo) => todo._id === id)
-  //   const task = fromList.splice(index, 1)[0]
-  //   toList.push(task)
-  // }
 
   async function completeTask(e) {
 	  let id = e.detail.id
 	  let isActive = e.detail.state === 'active' ? true : false
 	  let state =  isActive ? 'inactive' : 'active'
 
-	  await fetch('/edit', {
+	  let res = await fetch('/edit', {
       method: 'POST',
       headers: header,
       body: JSON.stringify({ 
@@ -76,11 +73,10 @@
 		  state: state})
     })
     
-    getTask()
-    // if (!isActive) listUpdate(id, completed, todos)
-    // else listUpdate(id)
-    // console.log(todos)
-    // console.log(completed)
+    let task = await res.json()
+    let i = all.findIndex((todo) => todo._id === id)
+    all.splice(i, 1, task)
+    all = all
   }
 
   function toggleDisplay () {
@@ -97,7 +93,7 @@
     justify-content: space-around;
     align-items: stretch;
     height: 100%;
-	background-color: beige;
+	  background-color: beige;
   }
 
   section {
@@ -110,18 +106,18 @@
 
   #taskInput {
     width: 35%;
-	align-content: center;
+	  align-content: center;
   }
 
   span {
-    display: flex;
-    flex: row wrap;
-    justify-content: flex-start;
+    margin: 0;
+    padding:0;
   }
 
   h2 {
-    margin: 5px;
-	cursor: pointer;
+    margin: 20px;
+    margin-left: 0;
+	  cursor: pointer;
   }
 
   #taskList {
@@ -144,8 +140,52 @@
 
     #taskInput {
       flex-direction: row;
-	  justify-content: space-evenly;
+	    justify-content: space-evenly;
     }
+  }
+
+  .dropdown {
+    position: relative;
+    display: inline;
+  }
+
+  .dropbtn {
+    border:none;
+    background: transparent;
+    padding:0;
+    width: auto;
+    font-size: 3rem;
+    color: rgb(39, 38, 38);
+    margin:0;
+  } 
+  
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+  }
+
+  .dropdown-content p {
+    color: black;
+    padding: 10px;
+    margin: 0;
+    text-decoration: none;
+    display: block;
+  }
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+  .dropdown-content p:hover {
+    background-color: #ddd;
+  }
+
+  .dropdown:hover .dropbtn {
+    text-shadow:0 1px 4px rgba(0, 0, 0, 0.26);
   }
 
 </style>
@@ -155,17 +195,31 @@
     <h2>To-Do App</h2>
     <input id='input' maxlength="50" type='text' bind:value={task} on:change={addTask}/>
     <button on:click={addTask}>Add</button>
+    <div>
+      Total tasks : {total}
+    </div>
   </section>
   <section id='taskList'>
-    <span>
-      <h2 on:click={toggleDisplay}>To-Dos</h2>
-	  <h2 on:click={toggleDisplay}>Completed</h2>
+    <span class="dropdown">
+    <button class="dropbtn">&#8801;</button>
+    <div class="dropdown-content">
+      <p on:click={toggleDisplay}>To-Dos</p>
+	    <p on:click={toggleDisplay}>Completed</p>
+    </div>
     </span>
 
 	{#if listDisplay === 'todo'}
-		<TodoList tasks={todos} on:delete={deleteTask} on:edit={editTask} on:complete={completeTask}/>
+    {#if todos.length}
+      <TodoList tasks={todos} on:delete={deleteTask} on:edit={editTask} on:complete={completeTask}/>
+    {:else}
+      <p>No active tasks</p>
+    {/if}
 	{:else}
-		<TodoList tasks={completed} on:delete={deleteTask} on:edit={editTask} on:complete={completeTask}/>
+    {#if completed.length}
+      <TodoList tasks={completed} on:delete={deleteTask} on:edit={editTask} on:complete={completeTask}/>
+    {:else}
+      <p>No tasks completed yet</p>
+    {/if}
 	{/if}
   </section>
 </div>

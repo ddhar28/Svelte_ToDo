@@ -87,6 +87,11 @@ var app = (function () {
     function children(element) {
         return Array.from(element.childNodes);
     }
+    function set_data(text, data) {
+        data = '' + data;
+        if (text.data !== data)
+            text.data = data;
+    }
     function custom_event(type, detail) {
         const e = document.createEvent('CustomEvent');
         e.initCustomEvent(type, false, false, detail);
@@ -982,8 +987,35 @@ var app = (function () {
 
     const file$3 = "src/App.svelte";
 
-    // (167:1) {:else}
-    function create_else_block$1(ctx) {
+    // (220:4) {:else}
+    function create_else_block_1(ctx) {
+    	var p;
+
+    	return {
+    		c: function create() {
+    			p = element("p");
+    			p.textContent = "No tasks completed yet";
+    			add_location(p, file$3, 220, 6, 4399);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, p, anchor);
+    		},
+
+    		p: noop,
+    		i: noop,
+    		o: noop,
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(p);
+    			}
+    		}
+    	};
+    }
+
+    // (218:4) {#if completed.length}
+    function create_if_block_2(ctx) {
     	var current;
 
     	var todolist = new TodoList({
@@ -1028,8 +1060,109 @@ var app = (function () {
     	};
     }
 
-    // (165:1) {#if listDisplay === 'todo'}
+    // (211:1) {#if listDisplay === 'todo'}
     function create_if_block$1(ctx) {
+    	var current_block_type_index, if_block, if_block_anchor, current;
+
+    	var if_block_creators = [
+    		create_if_block_1,
+    		create_else_block$1
+    	];
+
+    	var if_blocks = [];
+
+    	function select_block_type_1(ctx) {
+    		if (ctx.todos.length) return 0;
+    		return 1;
+    	}
+
+    	current_block_type_index = select_block_type_1(ctx);
+    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+
+    	return {
+    		c: function create() {
+    			if_block.c();
+    			if_block_anchor = empty();
+    		},
+
+    		m: function mount(target, anchor) {
+    			if_blocks[current_block_type_index].m(target, anchor);
+    			insert(target, if_block_anchor, anchor);
+    			current = true;
+    		},
+
+    		p: function update(changed, ctx) {
+    			var previous_block_index = current_block_type_index;
+    			current_block_type_index = select_block_type_1(ctx);
+    			if (current_block_type_index === previous_block_index) {
+    				if_blocks[current_block_type_index].p(changed, ctx);
+    			} else {
+    				group_outros();
+    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
+    					if_blocks[previous_block_index] = null;
+    				});
+    				check_outros();
+
+    				if_block = if_blocks[current_block_type_index];
+    				if (!if_block) {
+    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+    					if_block.c();
+    				}
+    				transition_in(if_block, 1);
+    				if_block.m(if_block_anchor.parentNode, if_block_anchor);
+    			}
+    		},
+
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(if_block);
+    			current = true;
+    		},
+
+    		o: function outro(local) {
+    			transition_out(if_block);
+    			current = false;
+    		},
+
+    		d: function destroy(detaching) {
+    			if_blocks[current_block_type_index].d(detaching);
+
+    			if (detaching) {
+    				detach(if_block_anchor);
+    			}
+    		}
+    	};
+    }
+
+    // (214:4) {:else}
+    function create_else_block$1(ctx) {
+    	var p;
+
+    	return {
+    		c: function create() {
+    			p = element("p");
+    			p.textContent = "No active tasks";
+    			add_location(p, file$3, 214, 6, 4207);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, p, anchor);
+    		},
+
+    		p: noop,
+    		i: noop,
+    		o: noop,
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(p);
+    			}
+    		}
+    	};
+    }
+
+    // (212:4) {#if todos.length}
+    function create_if_block_1(ctx) {
     	var current;
 
     	var todolist = new TodoList({
@@ -1075,18 +1208,20 @@ var app = (function () {
     }
 
     function create_fragment$3(ctx) {
-    	var div, section0, h20, t1, input, t2, button, t4, section1, span, h21, t6, h22, t8, current_block_type_index, if_block, current, dispose;
+    	var div2, section0, h2, t1, input, t2, button0, t4, div0, t5, t6, t7, section1, span, button1, t9, div1, p0, t11, p1, t13, current_block_type_index, if_block, current, dispose;
 
     	var if_block_creators = [
     		create_if_block$1,
-    		create_else_block$1
+    		create_if_block_2,
+    		create_else_block_1
     	];
 
     	var if_blocks = [];
 
     	function select_block_type(ctx) {
     		if (ctx.listDisplay === 'todo') return 0;
-    		return 1;
+    		if (ctx.completed.length) return 1;
+    		return 2;
     	}
 
     	current_block_type_index = select_block_type(ctx);
@@ -1094,55 +1229,68 @@ var app = (function () {
 
     	return {
     		c: function create() {
-    			div = element("div");
+    			div2 = element("div");
     			section0 = element("section");
-    			h20 = element("h2");
-    			h20.textContent = "To-Do App";
+    			h2 = element("h2");
+    			h2.textContent = "To-Do App";
     			t1 = space();
     			input = element("input");
     			t2 = space();
-    			button = element("button");
-    			button.textContent = "Add";
+    			button0 = element("button");
+    			button0.textContent = "Add";
     			t4 = space();
+    			div0 = element("div");
+    			t5 = text("Total tasks : ");
+    			t6 = text(ctx.total);
+    			t7 = space();
     			section1 = element("section");
     			span = element("span");
-    			h21 = element("h2");
-    			h21.textContent = "To-Dos";
-    			t6 = space();
-    			h22 = element("h2");
-    			h22.textContent = "Completed";
-    			t8 = space();
+    			button1 = element("button");
+    			button1.textContent = "≡";
+    			t9 = space();
+    			div1 = element("div");
+    			p0 = element("p");
+    			p0.textContent = "To-Dos";
+    			t11 = space();
+    			p1 = element("p");
+    			p1.textContent = "Completed";
+    			t13 = space();
     			if_block.c();
-    			attr(h20, "class", "svelte-xsjhs9");
-    			add_location(h20, file$3, 154, 4, 2990);
+    			attr(h2, "class", "svelte-ofpkab");
+    			add_location(h2, file$3, 194, 4, 3571);
     			attr(input, "id", "input");
     			attr(input, "maxlength", "50");
     			attr(input, "type", "text");
-    			attr(input, "class", "svelte-xsjhs9");
-    			add_location(input, file$3, 155, 4, 3013);
-    			attr(button, "class", "svelte-xsjhs9");
-    			add_location(button, file$3, 156, 4, 3102);
+    			attr(input, "class", "svelte-ofpkab");
+    			add_location(input, file$3, 195, 4, 3594);
+    			attr(button0, "class", "svelte-ofpkab");
+    			add_location(button0, file$3, 196, 4, 3683);
+    			add_location(div0, file$3, 197, 4, 3727);
     			attr(section0, "id", "taskInput");
-    			attr(section0, "class", "svelte-xsjhs9");
-    			add_location(section0, file$3, 153, 2, 2961);
-    			attr(h21, "class", "svelte-xsjhs9");
-    			add_location(h21, file$3, 160, 6, 3198);
-    			attr(h22, "class", "svelte-xsjhs9");
-    			add_location(h22, file$3, 161, 3, 3242);
-    			attr(span, "class", "svelte-xsjhs9");
-    			add_location(span, file$3, 159, 4, 3185);
+    			attr(section0, "class", "svelte-ofpkab");
+    			add_location(section0, file$3, 193, 2, 3542);
+    			attr(button1, "class", "dropbtn svelte-ofpkab");
+    			add_location(button1, file$3, 203, 4, 3843);
+    			attr(p0, "class", "svelte-ofpkab");
+    			add_location(p0, file$3, 205, 6, 3925);
+    			attr(p1, "class", "svelte-ofpkab");
+    			add_location(p1, file$3, 206, 5, 3969);
+    			attr(div1, "class", "dropdown-content svelte-ofpkab");
+    			add_location(div1, file$3, 204, 4, 3888);
+    			attr(span, "class", "dropdown svelte-ofpkab");
+    			add_location(span, file$3, 202, 4, 3815);
     			attr(section1, "id", "taskList");
-    			attr(section1, "class", "svelte-xsjhs9");
-    			add_location(section1, file$3, 158, 2, 3157);
-    			attr(div, "class", "container svelte-xsjhs9");
-    			add_location(div, file$3, 152, 0, 2935);
+    			attr(section1, "class", "svelte-ofpkab");
+    			add_location(section1, file$3, 201, 2, 3787);
+    			attr(div2, "class", "container svelte-ofpkab");
+    			add_location(div2, file$3, 192, 0, 3516);
 
     			dispose = [
     				listen(input, "input", ctx.input_input_handler),
     				listen(input, "change", ctx.addTask),
-    				listen(button, "click", ctx.addTask),
-    				listen(h21, "click", ctx.toggleDisplay),
-    				listen(h22, "click", ctx.toggleDisplay)
+    				listen(button0, "click", ctx.addTask),
+    				listen(p0, "click", ctx.toggleDisplay),
+    				listen(p1, "click", ctx.toggleDisplay)
     			];
     		},
 
@@ -1151,29 +1299,40 @@ var app = (function () {
     		},
 
     		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-    			append(div, section0);
-    			append(section0, h20);
+    			insert(target, div2, anchor);
+    			append(div2, section0);
+    			append(section0, h2);
     			append(section0, t1);
     			append(section0, input);
 
     			input.value = ctx.task;
 
     			append(section0, t2);
-    			append(section0, button);
-    			append(div, t4);
-    			append(div, section1);
+    			append(section0, button0);
+    			append(section0, t4);
+    			append(section0, div0);
+    			append(div0, t5);
+    			append(div0, t6);
+    			append(div2, t7);
+    			append(div2, section1);
     			append(section1, span);
-    			append(span, h21);
-    			append(span, t6);
-    			append(span, h22);
-    			append(section1, t8);
+    			append(span, button1);
+    			append(span, t9);
+    			append(span, div1);
+    			append(div1, p0);
+    			append(div1, t11);
+    			append(div1, p1);
+    			append(section1, t13);
     			if_blocks[current_block_type_index].m(section1, null);
     			current = true;
     		},
 
     		p: function update(changed, ctx) {
     			if (changed.task && (input.value !== ctx.task)) input.value = ctx.task;
+
+    			if (!current || changed.total) {
+    				set_data(t6, ctx.total);
+    			}
 
     			var previous_block_index = current_block_type_index;
     			current_block_type_index = select_block_type(ctx);
@@ -1209,7 +1368,7 @@ var app = (function () {
 
     		d: function destroy(detaching) {
     			if (detaching) {
-    				detach(div);
+    				detach(div2);
     			}
 
     			if_blocks[current_block_type_index].d();
@@ -1225,10 +1384,8 @@ var app = (function () {
       };
 
       let all = [];
-      let todos = [];
-      let completed = [];
-      let listDisplay =  'todo';
 
+      let listDisplay =  'todo';
       let task = '';
 
       async function getTask() {
@@ -1236,9 +1393,7 @@ var app = (function () {
           method: 'GET',
           Headers: header
         });
-    	all = await result.json();
-    	$$invalidate('todos', todos = all.filter((todo) => todo.state === 'active'));
-    	$$invalidate('completed', completed = all.filter((todo) => todo.state === 'inactive'));
+    	  $$invalidate('all', all = await result.json()); 
       }
 
       async function addTask() {
@@ -1249,10 +1404,9 @@ var app = (function () {
           headers: header,
           body: JSON.stringify({ taskname: newTask })
         });
-      newTask = await res.json();
-      all = all.concat(newTask);
-    	$$invalidate('todos', todos = todos.concat(newTask));
-    	$$invalidate('task', task = '');
+        newTask = await res.json();
+        $$invalidate('all', all = all.concat(newTask));
+    	  $$invalidate('task', task = '');
       }
 
       async function deleteTask (e) {
@@ -1262,7 +1416,8 @@ var app = (function () {
           headers: header,
           body: JSON.stringify({ _id: id })
         });
-        $$invalidate('todos', todos = todos.filter((todo) => todo._id !== id));
+
+        $$invalidate('all', all = all.filter((todo) => todo._id !== id));
       }
 
       async function editTask (e) {
@@ -1272,21 +1427,19 @@ var app = (function () {
           headers: header,
           body: JSON.stringify(editedTask)
         });
-        getTask();
+        
+        let task = await res.json();
+        let i = all.findIndex((todo) => todo._id === id);
+        all.splice(i, 1, task);
+        $$invalidate('all', all);
       }
-
-      // function listUpdate (id, fromList = todos , toList = completed) {
-      //   const index = fromList.findIndex((todo) => todo._id === id)
-      //   const task = fromList.splice(index, 1)[0]
-      //   toList.push(task)
-      // }
 
       async function completeTask(e) {
     	  let id = e.detail.id;
     	  let isActive = e.detail.state === 'active' ? true : false;
     	  let state =  isActive ? 'inactive' : 'active';
 
-    	  await fetch('/edit', {
+    	  let res = await fetch('/edit', {
           method: 'POST',
           headers: header,
           body: JSON.stringify({ 
@@ -1294,11 +1447,10 @@ var app = (function () {
     		  state: state})
         });
         
-        getTask();
-        // if (!isActive) listUpdate(id, completed, todos)
-        // else listUpdate(id)
-        // console.log(todos)
-        // console.log(completed)
+        let task = await res.json();
+        let i = all.findIndex((todo) => todo._id === id);
+        all.splice(i, 1, task);
+        $$invalidate('all', all);
       }
 
       function toggleDisplay () {
@@ -1313,9 +1465,15 @@ var app = (function () {
     		$$invalidate('task', task);
     	}
 
+    	let todos, completed, total;
+
+    	$$self.$$.update = ($$dirty = { all: 1 }) => {
+    		if ($$dirty.all) { $$invalidate('todos', todos = all.filter((todo) => todo.state === 'active')); }
+    		if ($$dirty.all) { $$invalidate('completed', completed = all.filter((todo) => todo.state === 'inactive')); }
+    		if ($$dirty.all) { $$invalidate('total', total = all.length); }
+    	};
+
     	return {
-    		todos,
-    		completed,
     		listDisplay,
     		task,
     		addTask,
@@ -1323,6 +1481,9 @@ var app = (function () {
     		editTask,
     		completeTask,
     		toggleDisplay,
+    		todos,
+    		completed,
+    		total,
     		input_input_handler
     	};
     }
